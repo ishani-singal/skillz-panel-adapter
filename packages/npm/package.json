@@ -1,0 +1,16 @@
+{
+  "name": "@skillz/panel-adapter",
+  "version": "0.1.0",
+  "description": "Convert AgentUXSpec → AgentPanelSpec for Skillz agents",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@skillz/panel-adapter-core": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}

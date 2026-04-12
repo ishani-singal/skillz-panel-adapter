@@ -1,0 +1,17 @@
+{
+  "name": "@skillz/panel-adapter-core",
+  "version": "0.1.0",
+  "description": "Core rule engine for converting AgentUXSpec → AgentPanelSpec",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "node --test dist/tests/*.test.js"
+  },
+  "dependencies": {
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}
