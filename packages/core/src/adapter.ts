@@ -21,6 +21,7 @@ import type {
   AgentUXSpec,
   AgentPanelSpec,
   PanelSection,
+  AgentEmbedSection,
   AdaptOptions,
   DataOutputDeclaration,
   EditToolDeclaration,
@@ -125,6 +126,21 @@ export function adapt(spec: AgentUXSpec, _options?: AdaptOptions): AgentPanelSpe
         }
         break;
       }
+    }
+  }
+
+  // Step 4: Append agent-embed sections for each child agent
+  if (spec.childAgentIds && spec.childAgentIds.length > 0) {
+    for (const childId of spec.childAgentIds) {
+      const embedSection: AgentEmbedSection = {
+        id: `embed-${childId}`,
+        type: 'agent-embed',
+        agentId: childId,
+        label: childId,
+        position: 'sidebar',
+        invokeOn: 'always',
+      };
+      sections.push(embedSection);
     }
   }
 

@@ -77,6 +77,10 @@ export interface AgentUXSpec {
   contributes?: DataContributionDeclaration[];
   agentTools?:  AgentToolDeclaration[];
   autoAdapt?:   boolean;
+  /** UI nesting: this agent renders nested inside the specified parent agent's panel. */
+  parentAgentId?: string;
+  /** UI nesting: these agents render as embedded panels inside this agent's view. */
+  childAgentIds?: string[];
 }
 
 // ─── Panel Spec (mirrors AgentPanelSpec from SDK) ─────────────────────────────
@@ -100,7 +104,8 @@ export type PanelSection =
   | ToggleSection
   | TableSection
   | CardListSection
-  | ActionFormSection;
+  | ActionFormSection
+  | AgentEmbedSection;
 
 interface BasePanelSection {
   id: string;
@@ -175,6 +180,15 @@ export interface ActionFormSection extends BasePanelSection {
     options?: string[];
     defaultValue?: string;
   }>;
+}
+
+/** Renders another agent's panel nested inside this agent's panel. */
+export interface AgentEmbedSection extends BasePanelSection {
+  type: 'agent-embed';
+  agentId: string;
+  label: string;
+  position: 'sidebar' | 'inline' | 'modal';
+  invokeOn: 'on-action' | 'on-context' | 'always';
 }
 
 // ─── Suggestion types ─────────────────────────────────────────────────────────
