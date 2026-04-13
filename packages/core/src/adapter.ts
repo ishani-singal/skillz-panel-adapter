@@ -48,6 +48,15 @@ export function adapt(spec: AgentUXSpec, _options?: AdaptOptions): AgentPanelSpe
         if ('dataKey' in section && section.dataKey === '__HISTORY__') {
           section.dataKey = primaryOutput?.rawContextKey ?? 'history';
         }
+        // Wire the first toggle-switch editTool as a per-card action button (e.g. Discard)
+        const toggleTool = spec.editTools.find(e => e.type === 'toggle-switch');
+        if (toggleTool) {
+          (section as { actionButton?: { label: string; actionName: string; paramKey: string } }).actionButton = {
+            label: toggleTool.label,
+            actionName: toggleTool.actionName,
+            paramKey: 'id',
+          };
+        }
         break;
       }
 
@@ -149,6 +158,14 @@ export function adapt(spec: AgentUXSpec, _options?: AdaptOptions): AgentPanelSpe
       .filter(s => 'action' in s)
       .map(s => (s as { action: string }).action),
   );
+  // Also include card-list actionButton actions so toggle-switch tools wired there
+  // are not double-injected as a global toggle section.
+  for (const s of sections) {
+    if (s.type === 'card-list') {
+      const ab = (s as { actionButton?: { actionName: string } }).actionButton;
+      if (ab?.actionName) referencedActions.add(ab.actionName);
+    }
+  }
 
   for (const tool of spec.editTools) {
     if (referencedActions.has(tool.actionName)) continue;
