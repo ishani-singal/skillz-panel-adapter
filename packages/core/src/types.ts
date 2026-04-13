@@ -54,12 +54,13 @@ export interface EditToolDeclaration {
 }
 
 export interface DataContributionDeclaration {
-  targetAgentId: string;
-  targetDataKey:  string;
-  fromOutputKey:  string;
-  mergeStrategy:  'append' | 'augment' | 'replace';
-  label:          string;
-  conditional?:   boolean;
+  targetAgentId:      string;
+  targetDataKey:      string;
+  fromOutputKey:      string;
+  mergeStrategy:      'append' | 'augment' | 'replace';
+  label:              string;
+  conditional?:       boolean;
+  calendarRenderHint?: 'block-event' | 'event-badge' | 'week-banner' | 'sidebar-only';
 }
 
 export interface AgentToolDeclaration {

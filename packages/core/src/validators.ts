@@ -49,12 +49,13 @@ export const EditToolDeclarationSchema = z.object({
 });
 
 export const DataContributionDeclarationSchema = z.object({
-  targetAgentId: z.string().min(1),
-  targetDataKey: z.string().min(1),
-  fromOutputKey: z.string().min(1),
-  mergeStrategy: z.enum(['append', 'augment', 'replace']),
-  label:         z.string().min(1),
-  conditional:   z.boolean().optional(),
+  targetAgentId:      z.string().min(1),
+  targetDataKey:      z.string().min(1),
+  fromOutputKey:      z.string().min(1),
+  mergeStrategy:      z.enum(['append', 'augment', 'replace']),
+  label:              z.string().min(1),
+  conditional:        z.boolean().optional(),
+  calendarRenderHint: z.enum(['block-event', 'event-badge', 'week-banner', 'sidebar-only']).optional(),
 });
 
 export const AgentToolDeclarationSchema = z.object({
@@ -72,6 +73,8 @@ export const AgentUXSpecSchema = z.object({
   contributes:      z.array(DataContributionDeclarationSchema).optional(),
   agentTools:       z.array(AgentToolDeclarationSchema).optional(),
   autoAdapt:        z.boolean().optional(),
+  parentAgentId:    z.string().optional(),
+  childAgentIds:    z.array(z.string()).optional(),
 });
 
 export type ValidationResult =
