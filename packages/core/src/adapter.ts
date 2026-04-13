@@ -43,8 +43,10 @@ export function adapt(spec: AgentUXSpec, _options?: AdaptOptions): AgentPanelSpe
         if ('dataKey' in section && section.dataKey === '__PRIMARY__') {
           section.dataKey = primaryOutput?.rawContextKey ?? 'items';
         }
+        // __HISTORY__ is a past-results list — wire to primaryOutput (the main data store),
+        // not secondaryOutput (which is the result scalar used by text-summary).
         if ('dataKey' in section && section.dataKey === '__HISTORY__') {
-          section.dataKey = secondaryOutput?.rawContextKey ?? 'history';
+          section.dataKey = primaryOutput?.rawContextKey ?? 'history';
         }
         break;
       }
@@ -65,7 +67,7 @@ export function adapt(spec: AgentUXSpec, _options?: AdaptOptions): AgentPanelSpe
       case 'text-summary': {
         if ('dataKey' in section) {
           const key = section.dataKey as string;
-          if (key === '__PRIMARY__' || key === '__METRIC__' || key === '__SUMMARY__' || key === '__RESULT__' || key === '__CONFIRMATION__') {
+          if (key === '__PRIMARY__' || key === '__METRIC__' || key === '__SUMMARY__' || key === '__CONFIRMATION__') {
             section.dataKey = primaryOutput?.rawContextKey ?? 'summary';
           }
           if (key === '__RESULT__') {
@@ -129,6 +131,116 @@ export function adapt(spec: AgentUXSpec, _options?: AdaptOptions): AgentPanelSpe
     }
   }
 
+  // Step 3B: Remove dead scaffold sections whose action was never wired
+  // (placeholder still present means no matching editTool was declared)
+  const DEAD_PLACEHOLDERS = ['__FILTER_ACTION__', '__SORT_ACTION__', '__TOGGLE_ACTION__'];
+  const wiredSections = sections.filter(s => {
+    if ('action' in s && typeof (s as { action: unknown }).action === 'string') {
+      return !DEAD_PLACEHOLDERS.includes((s as { action: string }).action);
+    }
+    return true;
+  });
+  sections.length = 0;
+  sections.push(...wiredSections);
+
+  // Step 3C: Inject sections for editTools not yet referenced by any section action
+  const referencedActions = new Set(
+    sections
+      .filter(s => 'action' in s)
+      .map(s => (s as { action: string }).action),
+  );
+
+  for (const tool of spec.editTools) {
+    if (referencedActions.has(tool.actionName)) continue;
+
+    switch (tool.type) {
+      case 'form-submit':
+      case 'inline-text-edit': {
+        const injected: PanelSection = {
+          id: `injected-form-${tool.actionName}`,
+          type: 'action-form',
+          title: tool.label,
+          action: tool.actionName,
+          submitLabel: tool.label,
+          fields: buildFieldsFromEditTools(spec.editTools, tool.actionName),
+        } as PanelSection;
+        sections.push(injected);
+        referencedActions.add(tool.actionName);
+        break;
+      }
+      case 'tag-input': {
+        const injected: PanelSection = {
+          id: `injected-tag-${tool.actionName}`,
+          type: 'tag-input',
+          title: tool.label,
+          action: tool.actionName,
+          paramName: 'tags',
+          placeholder: `${tool.label}…`,
+        } as PanelSection;
+        sections.push(injected);
+        referencedActions.add(tool.actionName);
+        break;
+      }
+      case 'select-dropdown': {
+        const injected: PanelSection = {
+          id: `injected-select-${tool.actionName}`,
+          type: 'select',
+          title: tool.label,
+          options: [],
+          action: tool.actionName,
+          paramName: 'value',
+        } as PanelSection;
+        sections.push(injected);
+        referencedActions.add(tool.actionName);
+        break;
+      }
+      case 'toggle-switch': {
+        const injected: PanelSection = {
+          id: `injected-toggle-${tool.actionName}`,
+          type: 'toggle',
+          label: tool.label,
+          action: tool.actionName,
+          paramName: 'enabled',
+        } as PanelSection;
+        sections.push(injected);
+        referencedActions.add(tool.actionName);
+        break;
+      }
+      case 'table-row-editor': {
+        // Wire into the first table section's action-button column
+        const tableSection = sections.find(s => s.type === 'table') as (typeof sections[0] & { columns: Array<{ key: string; label: string; type?: string; actionName?: string }> }) | undefined;
+        if (tableSection && 'columns' in tableSection) {
+          tableSection.columns.push({ key: tool.actionName, label: tool.label, type: 'action-button', actionName: tool.actionName });
+          referencedActions.add(tool.actionName);
+        }
+        break;
+      }
+    }
+  }
+
+  // Step 3D: Promote text-summary to card-list when the wired output is an array type
+  const ARRAY_OUTPUT_TYPES = new Set([
+    'calendar-events', 'task-list', 'contact-list', 'scored-list',
+    'recommendation-list', 'notification', 'travel-buffer-event', 'email',
+  ]);
+  for (let i = 0; i < sections.length; i++) {
+    const s = sections[i];
+    if (s.type !== 'text-summary') continue;
+    const dataKey = (s as { dataKey: string }).dataKey;
+    // Find which output this section was wired to
+    const matchedOutput = spec.dataOutputs.find(o => o.rawContextKey === dataKey);
+    if (matchedOutput && ARRAY_OUTPUT_TYPES.has(matchedOutput.type)) {
+      sections[i] = {
+        id: s.id,
+        type: 'card-list',
+        title: s.title,
+        dataKey,
+        titleKey: 'title',
+        subtitleKey: 'subtitle',
+      } as PanelSection;
+    }
+  }
+
   // Step 4: Append agent-embed sections for each child agent
   if (spec.childAgentIds && spec.childAgentIds.length > 0) {
     for (const childId of spec.childAgentIds) {
@@ -161,9 +273,14 @@ export function adapt(spec: AgentUXSpec, _options?: AdaptOptions): AgentPanelSpe
 function buildFieldsFromEditTools(
   editTools: EditToolDeclaration[],
   actionName: string,
-): Array<{ name: string; label: string; inputType: 'text' | 'number' | 'date' | 'select' | 'textarea'; required?: boolean }> {
+): Array<{ name: string; label: string; inputType: 'text' | 'number' | 'date' | 'select' | 'textarea'; required?: boolean; options?: string[]; defaultValue?: string }> {
   const tool = editTools.find(e => e.actionName === actionName);
   if (!tool) return [];
+
+  // Use explicitly declared fields when the agent provides them
+  if (tool.fields && tool.fields.length > 0) {
+    return tool.fields;
+  }
 
   // Generic single-field form as a baseline — developer fills in proper fields
   // in the developer portal's customize step.

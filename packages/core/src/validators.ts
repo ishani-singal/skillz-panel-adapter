@@ -42,10 +42,20 @@ export const DataOutputDeclarationSchema = z.object({
   rawContextKey: z.string().min(1),
 });
 
+export const EditToolFieldSchema = z.object({
+  name:         z.string().min(1),
+  label:        z.string().min(1),
+  inputType:    z.enum(['text', 'number', 'date', 'select', 'textarea']),
+  required:     z.boolean().optional(),
+  options:      z.array(z.string()).optional(),
+  defaultValue: z.string().optional(),
+});
+
 export const EditToolDeclarationSchema = z.object({
   type:       EditToolTypeSchema,
   actionName: z.string().min(1),
   label:      z.string().min(1),
+  fields:     z.array(EditToolFieldSchema).optional(),
 });
 
 export const DataContributionDeclarationSchema = z.object({

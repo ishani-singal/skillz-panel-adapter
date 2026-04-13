@@ -51,6 +51,15 @@ export interface EditToolDeclaration {
   type: EditToolType;
   actionName: string;
   label: string;
+  /** Explicit form fields for this tool. When present, overrides the generic single-field fallback in buildFieldsFromEditTools(). */
+  fields?: Array<{
+    name: string;
+    label: string;
+    inputType: 'text' | 'number' | 'date' | 'select' | 'textarea';
+    required?: boolean;
+    options?: string[];
+    defaultValue?: string;
+  }>;
 }
 
 export interface DataContributionDeclaration {
