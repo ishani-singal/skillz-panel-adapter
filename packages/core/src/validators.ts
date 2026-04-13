@@ -19,7 +19,7 @@ export const DataSourceTypeSchema = z.enum([
 export const DataOutputTypeSchema = z.enum([
   'calendar-events', 'task-list', 'contact-list', 'metrics-chart',
   'text-summary', 'notification', 'email', 'booking-record', 'payment-record',
-  'scored-list', 'travel-buffer-event', 'trend-report', 'social-plan',
+  'scored-list', 'travel-buffer-event', 'travel-legs', 'trend-report', 'social-plan',
   'supply-chain-record', 'recommendation-list',
 ]);
 

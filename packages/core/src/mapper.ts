@@ -92,7 +92,7 @@ export function getScaffold(arch: BaseArchitecture): SectionScaffold {
         layout: 'two-column',
         sections: [
           { type: 'action-form', id: 'config-form',   title: 'Configuration', action: '__CONFIG_ACTION__', submitLabel: 'Save', fields: [] },
-          { type: 'card-list',   id: 'records-list',  title: 'Records',       dataKey: '__PRIMARY__', titleKey: 'title', subtitleKey: 'status', metaKey: 'createdAt' },
+          { type: 'card-list',   id: 'records-list',  title: 'Records',       dataKey: '__PRIMARY__', titleKey: 'title', subtitleKey: 'label', metaKey: 'source' },
         ],
       };
 
