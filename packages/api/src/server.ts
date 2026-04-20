@@ -16,7 +16,26 @@ import type { AgentUXSpec } from '@skillz/panel-adapter-core';
 const app = express();
 const PORT = parseInt(process.env.PORT ?? '4000', 10);
 
-app.use(cors());
+// Only allow requests from the shell (Azure App Service) or localhost in dev.
+// SHELL_URL must be set in the Docker environment (e.g. https://skillz-app.azurewebsites.net).
+const allowedOrigins = [
+  process.env.SHELL_URL,
+  'http://localhost:3000',
+  'http://localhost:3001',
+].filter(Boolean) as string[];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow server-to-server requests (no Origin header) and explicitly listed origins.
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS: origin '${origin}' not allowed`));
+    }
+  },
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 app.use(express.json({ limit: '256kb' }));
 
 // ── Health ────────────────────────────────────────────────────────────────────
