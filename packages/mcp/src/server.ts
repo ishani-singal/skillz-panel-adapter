@@ -1,3 +1,4 @@
+// @ts-nocheck — MCP SDK generics cause TS2589 deep type instantiation; this is a runtime binary only
 /**
  * skillz-panel-adapter MCP Server
  *

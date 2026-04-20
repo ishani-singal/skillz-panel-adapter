@@ -4,7 +4,7 @@
   "description": "MCP server for the Skillz panel adapter",
   "main": "./dist/server.js",
   "scripts": {
-    "build": "node --max-old-space-size=4096 node_modules/typescript/bin/tsc",
+    "build": "tsc",
     "start": "node dist/server.js",
     "dev": "ts-node src/server.ts"
   },
