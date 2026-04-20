@@ -10,9 +10,11 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
-    "@skillz/panel-adapter-core": "workspace:*"
+    "@skillz/panel-adapter-core": "workspace:*",
+    "zod": "^3.22.0"
   },
   "devDependencies": {
+    "@types/node": "^20.0.0",
     "typescript": "^5.4.0",
     "ts-node": "^10.9.0"
   }
