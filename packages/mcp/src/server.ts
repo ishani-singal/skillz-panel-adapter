@@ -117,6 +117,8 @@ server.tool(
 
 // ── Start server ──────────────────────────────────────────────────────────────
 
-const transport = new StdioServerTransport();
-await server.connect(transport);
-console.error('skillz-panel-adapter MCP server running on stdio');
+void (async () => {
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
+  console.error('skillz-panel-adapter MCP server running on stdio');
+})();
